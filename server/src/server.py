@@ -407,7 +407,6 @@ def create_app():
         return jsonify({"documents": docs}), 200
 
     # GET /api/list-versions
-    @app.get("/api/list-versions")
     @app.get("/api/list-versions/<int:document_id>")
     @require_auth
     def list_versions(document_id: int | None = None):

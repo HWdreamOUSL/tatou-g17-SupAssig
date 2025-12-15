@@ -1,9 +1,5 @@
 name: Python Tests
 
-permissions:
-  contents: read
-  pull-requests: write
-
 on:
   push:
     branches: [ "main" ]
@@ -21,6 +17,7 @@ jobs:
       MARIADB_PASSWORD: ${{ secrets.MARIADB_PASSWORD }}
       FLAG_2: ${{ secrets.FLAG_2 }}
 
+    # MariaDB service - use hardcoded values or fallback to defaults
     services:
       mariadb:
         image: mariadb:11.4
@@ -44,7 +41,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.12.x"
 
       - name: Install dependencies
         working-directory: server
@@ -54,6 +51,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
 
+      # Wait for MariaDB to be ready
       - name: Wait for MariaDB
         run: |
           sudo apt-get update
@@ -67,6 +65,7 @@ jobs:
             sleep 2
           done
 
+      # Initialize database with your schema
       - name: Initialize database
         run: |
           mariadb -h 127.0.0.1 -P 3306 -u root -p"rootpassword" tatou < db/tatou.sql
@@ -75,6 +74,7 @@ jobs:
       - name: Run tests with coverage
         working-directory: server
         env:
+          # Set database connection for tests (use 127.0.0.1 instead of 'db')
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
           DB_NAME: tatou
@@ -82,14 +82,16 @@ jobs:
           DB_PASSWORD: tatou_password
           TESTING: "true"
           FLAG_2: ${{ secrets.FLAG_2 }}
+          # Optional: mock RMAP if not needed for tests
           RMAP_BASE_PDF: /tmp/mock_rmap.pdf
           RMAP_KEYS_DIR: /tmp/keys
           TEST_MODE: "1"
         run: |
           . .venv/bin/activate
+          # Create mock files if needed
           mkdir -p /tmp/keys
           touch /tmp/mock_rmap.pdf
-
+          
           python -m pytest \
             --verbose \
             --junit-xml=test-results/junit.xml \
@@ -97,12 +99,11 @@ jobs:
             --self-contained-html \
             --cov=src \
             --cov-report=html:test-results/coverage \
-            --cov-report=json:coverage.json \
             --cov-report=term
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always()  # Upload even if tests fail
         with:
           name: test-results
           path: server/test-results/
@@ -120,13 +121,12 @@ jobs:
         if: github.event_name == 'pull_request'
         with:
           GITHUB_TOKEN: ${{ github.token }}
-          coverage-path: server/coverage.json
           MINIMUM_GREEN: 80
           MINIMUM_ORANGE: 60
 
   docker:
     runs-on: ubuntu-latest
-    needs: test
+    needs: test   # Only build/push Docker image if tests pass
 
     steps:
       - name: Checkout repository

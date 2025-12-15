@@ -85,6 +85,8 @@ jobs:
           # Optional: mock RMAP if not needed for tests
           RMAP_BASE_PDF: /tmp/mock_rmap.pdf
           RMAP_KEYS_DIR: /tmp/keys
+          # Fix: set TEST_MODE here (Bash runner) instead of PowerShell syntax in run:
+          TEST_MODE: "1"
         run: |
           . .venv/bin/activate
           # Create mock files if needed

@@ -91,7 +91,7 @@ jobs:
           mkdir -p /tmp/keys
           touch /tmp/mock_rmap.pdf
           
-          python -m pytest \
+          $env:TEST_MODE="1 python -m pytest \
             --verbose \
             --junit-xml=test-results/junit.xml \
             --html=test-results/report.html \

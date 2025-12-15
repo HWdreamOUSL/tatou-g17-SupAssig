@@ -117,8 +117,13 @@ Generate test coverage reports:
 # Run tests with coverage
 python -m pytest --cov=src --cov-report=html --cov-report=term
 
+# Run tests with coverage and Mock DB
+$env:TEST_MODE="1"; python -m pytest --cov=src --cov-report=html --cov-report=term
+
 # View HTML coverage report
 # Open htmlcov/index.html in your browser
+start .\htmlcov\index.html
+
 
 # Generate detailed coverage report
 python -m pytest --cov=src --cov-report=html:test-results/coverage --cov-report=term-missing

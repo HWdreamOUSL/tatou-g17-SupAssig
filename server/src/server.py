@@ -156,10 +156,57 @@ def create_app():
 
     def get_engine():
         eng = app.config.get("_ENGINE")
+
         if eng is None:
-            eng = create_engine(db_url(), pool_pre_ping=True, future=True)
+            # Check TEST_MODE from environment directly
+            if os.environ.get("TEST_MODE") == "1":
+                eng = create_engine(
+                    "sqlite:///:memory:",
+                    future=True
+                )
+                _init_mock_schema(eng)
+            else:
+                eng = create_engine(db_url(), pool_pre_ping=True, future=True)
+
             app.config["_ENGINE"] = eng
+
         return eng
+
+    def _init_mock_schema(engine):
+        schema_sql = """
+        CREATE TABLE Users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE,
+            hpassword TEXT,
+            login TEXT UNIQUE
+        );
+
+        CREATE TABLE Documents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            path TEXT,
+            ownerid INTEGER,
+            sha256 BLOB,
+            size INTEGER,
+            creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE Versions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            documentid INTEGER,
+            link TEXT,
+            intended_for TEXT,
+            secret TEXT,
+            method TEXT,
+            position TEXT,
+            path TEXT
+        );
+        """
+
+        with engine.begin() as conn:
+            for stmt in schema_sql.split(";"):
+                if stmt.strip():
+                    conn.execute(text(stmt))
 
     # --- Helpers ---
     def _serializer():
@@ -338,7 +385,7 @@ def create_app():
 
         try:
             with get_engine().begin() as conn:
-                conn.execute(
+                result = conn.execute(
                     text("""
                         INSERT INTO Documents (name, path, ownerid, sha256, size)
                         VALUES (:name, :path, :ownerid, UNHEX(:sha256hex), :size)
@@ -351,7 +398,10 @@ def create_app():
                         "size": int(size),
                     },
                 )
-                did = int(conn.execute(text("SELECT LAST_INSERT_ID()")).scalar())
+
+                #Works for SQLite and MySQL
+                did = int(result.lastrowid)
+
                 row = conn.execute(
                     text("""
                         SELECT id, name, creation, HEX(sha256) AS sha256_hex, size
@@ -834,7 +884,7 @@ def create_app():
 
         try:
             with get_engine().begin() as conn:
-                conn.execute(
+                result = conn.execute(
                     text("""
                         INSERT INTO Versions (documentid, link, intended_for, secret, method, position, path)
                         VALUES (:documentid, :link, :intended_for, :secret, :method, :position, :path)
@@ -849,7 +899,8 @@ def create_app():
                         "path": str(dest_path)
                     },
                 )
-                vid = int(conn.execute(text("SELECT LAST_INSERT_ID()")).scalar())
+
+                vid = result.lastrowid
                 app.logger.debug(f"Version record created: vid={vid}")
         except Exception as e:
             # best-effort cleanup if DB insert fails

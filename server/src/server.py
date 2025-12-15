@@ -158,7 +158,8 @@ def create_app():
         eng = app.config.get("_ENGINE")
 
         if eng is None:
-            if TEST_MODE:
+            # Check TEST_MODE from environment directly
+            if os.environ.get("TEST_MODE") == "1":
                 eng = create_engine(
                     "sqlite:///:memory:",
                     future=True
@@ -384,7 +385,7 @@ def create_app():
 
         try:
             with get_engine().begin() as conn:
-                conn.execute(
+                result = conn.execute(
                     text("""
                         INSERT INTO Documents (name, path, ownerid, sha256, size)
                         VALUES (:name, :path, :ownerid, UNHEX(:sha256hex), :size)
@@ -883,7 +884,7 @@ def create_app():
 
         try:
             with get_engine().begin() as conn:
-                conn.execute(
+                result = conn.execute(
                     text("""
                         INSERT INTO Versions (documentid, link, intended_for, secret, method, position, path)
                         VALUES (:documentid, :link, :intended_for, :secret, :method, :position, :path)

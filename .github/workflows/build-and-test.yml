@@ -85,13 +85,15 @@ jobs:
           # Optional: mock RMAP if not needed for tests
           RMAP_BASE_PDF: /tmp/mock_rmap.pdf
           RMAP_KEYS_DIR: /tmp/keys
+          # Fix: set TEST_MODE here (Bash runner) instead of PowerShell syntax in run:
+          TEST_MODE: "1"
         run: |
           . .venv/bin/activate
           # Create mock files if needed
           mkdir -p /tmp/keys
           touch /tmp/mock_rmap.pdf
           
-          $env:TEST_MODE="1" python -m pytest \
+          python -m pytest \
             --verbose \
             --junit-xml=test-results/junit.xml \
             --html=test-results/report.html \

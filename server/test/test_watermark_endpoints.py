@@ -76,24 +76,23 @@ class TestCreateWatermark:
         assert resp.status_code == 400
 
     def test_invalid_document_id(self, client, auth_headers):
-        """Invalid document ID via query parameter (handled in route)."""
-        resp = client.post(
-            '/api/create-watermark?id=abc',
-            json={
-                'method': 'test-success',
-                'intended_for': 'alice@test.com',
-                'secret': 'secret',
-                'key': 'key'
-            },
-            headers=auth_headers
-        )
+        """Test error with invalid document ID."""
+        # Use query parameter instead of path parameter
+        resp = client.post('/api/create-watermark?id=notanumber',
+                           json={
+                               'method': 'test-success',
+                               'intended_for': 'alice@test.com',
+                               'secret': 'secret',
+                               'key': 'key'
+                           },
+                           headers=auth_headers)
 
         assert resp.status_code == 400
 
     # Same for read-watermark test:
     def test_invalid_document_id(self, client, auth_headers):
-        """Invalid document ID in path never reaches handler (Flask routing)."""
-        resp = client.post('/api/read-watermark/abc',
+        """Test error with invalid document ID."""
+        resp = client.post('/api/read-watermark?id=abc',
                            json={
                                'method': 'test-success',
                                'key': 'key'
@@ -101,6 +100,7 @@ class TestCreateWatermark:
                            headers=auth_headers)
 
         assert resp.status_code == 400
+
 
     def test_missing_method(self, client, auth_headers, test_pdf):
         """Test error when method field missing."""

@@ -100,7 +100,7 @@ class TestCreateWatermark:
                            },
                            headers=auth_headers)
 
-        assert resp.status_code in (400, 404, 405)
+        assert resp.status_code == 405
 
     def test_missing_method(self, client, auth_headers, test_pdf):
         """Test error when method field missing."""

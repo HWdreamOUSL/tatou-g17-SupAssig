@@ -2,86 +2,87 @@ from watermarking_method import WatermarkingMethod
 
 
 class TestWatermarkSuccess(WatermarkingMethod):
-    
-    @staticmethod
-    def get_name():
+
+    @property
+    def name(self):
+        """Method name for registration."""
         return "test-success"
-    
-    @staticmethod
-    def get_usage():
+
+    def get_usage(self):
+        """Return usage description."""
         return "Test method that succeeds"
-    
-    @staticmethod
-    def is_applicable(pdf, position=None):
+
+    def is_watermark_applicable(self, pdf, position=None):
+        """Check if watermarking is applicable."""
         return True
-    
-    @staticmethod
-    def apply(pdf, secret, key, position=None):
-        #Read the PDF and add our secret at the end
-        with open(pdf, 'rb') as f:
-            data = f.read()
+
+    def add_watermark(self, pdf, secret, key, position=None):
+        """Apply watermark to PDF."""
+        from watermarking_method import load_pdf_bytes
+
+        # Load the PDF bytes
+        data = load_pdf_bytes(pdf)
+
         # Add a simple marker with the secret
         result = data + b"\n%%TEST_WM:" + secret.encode() + b"\n"
         return result
-    
-    @staticmethod
-    def read(pdf, key):
-        # Read the secret back
-        with open(pdf, 'rb') as f:
-            data = f.read()
+
+    def read_secret(self, pdf, key):
+        """Read the secret back from watermarked PDF."""
+        from watermarking_method import load_pdf_bytes
+
+        data = load_pdf_bytes(pdf)
         marker = b"\n%%TEST_WM:"
+
         if marker in data:
             start = data.find(marker) + len(marker)
             end = data.find(b"\n", start)
             return data[start:end].decode()
-        return None
+
+        raise ValueError("No test watermark found in PDF")
 
 
 class TestWatermarkFails(WatermarkingMethod):
     """Mock that always fails when applying."""
-    
-    @staticmethod
-    def get_name():
+
+    @property
+    def name(self):
         return "test-fail"
-    
-    @staticmethod
-    def get_usage():
+
+    def get_usage(self):
         return "Test method that fails"
-    
-    @staticmethod
-    def is_applicable(pdf, position=None):
+
+    def is_watermark_applicable(self, pdf, position=None):
+        """Always applicable, but will fail on apply."""
         return True
-    
-    @staticmethod
-    def apply(pdf, secret, key, position=None):
-        # Simulate a failure
+
+    def add_watermark(self, pdf, secret, key, position=None):
+        """Simulate a failure during watermarking."""
         raise Exception("Watermarking failed on purpose")
-    
-    @staticmethod
-    def read(pdf, key):
-        return None
+
+    def read_secret(self, pdf, key):
+        """Not used in failure tests."""
+        raise Exception("Cannot read from failed watermark")
 
 
 class TestWatermarkNotApplicable(WatermarkingMethod):
     """Mock that reports not applicable."""
-    
-    @staticmethod
-    def get_name():
+
+    @property
+    def name(self):
         return "test-not-applicable"
-    
-    @staticmethod
-    def get_usage():
+
+    def get_usage(self):
         return "Test method not applicable"
-    
-    @staticmethod
-    def is_applicable(pdf, position=None):
-        # Always return False to test this branch
+
+    def is_watermark_applicable(self, pdf, position=None):
+        """Always return False to test this branch."""
         return False
-    
-    @staticmethod
-    def apply(pdf, secret, key, position=None):
-        raise Exception("Should not be called")
-    
-    @staticmethod
-    def read(pdf, key):
-        return None
+
+    def add_watermark(self, pdf, secret, key, position=None):
+        """Should not be called if applicability check works."""
+        raise Exception("Should not be called - method not applicable")
+
+    def read_secret(self, pdf, key):
+        """Should not be called."""
+        raise Exception("Should not be called - method not applicable")

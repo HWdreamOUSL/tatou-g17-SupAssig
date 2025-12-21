@@ -26,21 +26,21 @@ jobs:
           python -m pip install -e ".[dev]"
       
       - name: Run unit tests with coverage
+        working-directory: server
         run: |
-          mkdir -p test-results test-results/coverage
-          server/.venv/bin/python -m pytest \
-            --verbose
-            --html=test-results/report.html
-            --self-contained-html
-            --cov=src
-            --cov-report=html:test-results/coverage
+          . .venv/bin/activate
+          pytest \
+            --verbose \
+            --cov=src \
+            --cov-report=html \
             --cov-report=term
         env:
           TEST_MODE: "1"
       
       - name: Upload coverage report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: server/test-results/coverage
+          path: server/htmlcov
           retention-days: 30

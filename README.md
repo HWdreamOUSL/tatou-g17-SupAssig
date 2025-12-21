@@ -595,3 +595,13 @@ This project is for educational purposes only. See course materials for usage re
 ---
 
 **Last Updated:** December 06, 2025.  
+
+Command to Run Tests
+bash# Set TEST_MODE environment variable
+export TEST_MODE=1
+
+# Run all tests with coverage report
+pytest -v \
+  --cov=src \
+  --cov-report=html \
+  --cov-report=term

@@ -27,6 +27,7 @@ jobs:
       
       - name: Run unit tests with coverage
         run: |
+          mkdir -p test-results test-results/coverage
           server/.venv/bin/python -m pytest \
             --verbose
             --junit-xml=test-results/junit.xml
@@ -34,7 +35,7 @@ jobs:
             --self-contained-html
             --cov=src
             --cov-report=html:test-results/coverage
-            --cov-report=term env: TEST_MODE: "1"
+            --cov-report=term
         env:
           TEST_MODE: "1"
       
@@ -42,5 +43,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: test-results/coverage
+          path: server/test-results/coverage
           retention-days: 30

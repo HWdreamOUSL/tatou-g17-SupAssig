@@ -38,7 +38,10 @@ class TestCreateWatermark:
     """Tests for POST /api/create-watermark endpoint."""
 
     def test_basic_success(self, client, auth_headers, test_pdf):
-        """Test creating watermark with valid data."""
+        """Test normal watermark creation flow.
+
+        Checks: Basic watermark creation works when all required fields are provided.
+        """
         # First upload a document
         with open(test_pdf, 'rb') as f:
             resp = client.post('/api/upload-document',
@@ -63,7 +66,10 @@ class TestCreateWatermark:
         assert 'link' in data
 
     def test_missing_document_id(self, client, auth_headers):
-        """Test error when no document ID provided."""
+        """Test what happens when document ID is not provided.
+
+        Checks: Server returns error if no document ID is given.
+        """
         resp = client.post('/api/create-watermark',
                            json={
                                'method': 'test-success',
@@ -76,8 +82,10 @@ class TestCreateWatermark:
         assert resp.status_code == 400
 
     def test_invalid_document_id(self, client, auth_headers):
-        """Test error with invalid document ID via query parameter."""
-        # Use query parameter instead of path to test validation
+        """Test what happens with non-numeric document ID.
+
+        Checks: Server rejects invalid document IDs like "abc" instead of numbers.
+        """
         resp = client.post('/api/create-watermark?id=abc',
                            json={
                                'method': 'test-success',
@@ -90,7 +98,10 @@ class TestCreateWatermark:
         assert resp.status_code == 400
 
     def test_missing_method(self, client, auth_headers, test_pdf):
-        """Test error when method field missing."""
+        """Test behavior when method field is missing.
+
+        Checks: Server validates that method field is required.
+        """
         with open(test_pdf, 'rb') as f:
             resp = client.post('/api/upload-document',
                                data={'file': (f, 'test.pdf')},
@@ -109,7 +120,10 @@ class TestCreateWatermark:
         assert resp.status_code == 400
 
     def test_missing_secret(self, client, auth_headers, test_pdf):
-        """Test error when secret field missing."""
+        """Test behavior when secret field is missing.
+
+        Checks: Server validates that secret field is required.
+        """
         with open(test_pdf, 'rb') as f:
             resp = client.post('/api/upload-document',
                                data={'file': (f, 'test.pdf')},
@@ -128,7 +142,10 @@ class TestCreateWatermark:
         assert resp.status_code == 400
 
     def test_method_not_applicable(self, client, auth_headers, test_pdf):
-        """Test error when watermark method not applicable."""
+        """Test what happens when watermark method can't be used on the PDF.
+
+        Checks: Server handles case where watermarking method doesn't work for the file.
+        """
         with open(test_pdf, 'rb') as f:
             resp = client.post('/api/upload-document',
                                data={'file': (f, 'test.pdf')},
@@ -148,7 +165,10 @@ class TestCreateWatermark:
         assert resp.status_code == 400
 
     def test_watermarking_fails(self, client, auth_headers, test_pdf):
-        """Test error when watermarking process fails."""
+        """Test what happens when watermarking process crashes.
+
+        Checks: Server handles errors during watermark creation properly.
+        """
         with open(test_pdf, 'rb') as f:
             resp = client.post('/api/upload-document',
                                data={'file': (f, 'test.pdf')},
@@ -168,7 +188,10 @@ class TestCreateWatermark:
         assert resp.status_code == 500
 
     def test_no_auth(self, client):
-        """Test error when not authenticated."""
+        """Test what happens without login.
+
+        Checks: Server blocks requests from users who aren't logged in.
+        """
         resp = client.post('/api/create-watermark/1',
                            json={
                                'method': 'test-success',
@@ -184,7 +207,10 @@ class TestReadWatermark:
     """Tests for POST /api/read-watermark endpoint."""
 
     def test_read_success(self, client, auth_headers, test_pdf):
-        """Test reading watermark successfully."""
+        """Test normal watermark reading flow.
+
+        Checks: Can read back watermark that was previously added.
+        """
         # Upload document
         with open(test_pdf, 'rb') as f:
             resp = client.post('/api/upload-document',
@@ -217,7 +243,10 @@ class TestReadWatermark:
         assert data['secret'] == secret
 
     def test_missing_document_id(self, client, auth_headers):
-        """Test error when no document ID provided."""
+        """Test what happens when document ID is not provided.
+
+        Checks: Server returns error if no document ID is given.
+        """
         resp = client.post('/api/read-watermark',
                            json={
                                'method': 'test-success',
@@ -228,8 +257,10 @@ class TestReadWatermark:
         assert resp.status_code == 400
 
     def test_invalid_document_id(self, client, auth_headers):
-        """Test error with invalid document ID via query parameter."""
-        # Use query parameter instead of path to test validation
+        """Test what happens with non-numeric document ID.
+
+        Checks: Server rejects invalid document IDs.
+        """
         resp = client.post('/api/read-watermark?id=abc',
                            json={
                                'method': 'test-success',
@@ -240,7 +271,10 @@ class TestReadWatermark:
         assert resp.status_code == 400
 
     def test_document_not_found(self, client, auth_headers):
-        """Test error when document doesn't exist."""
+        """Test reading from document that doesn't exist.
+
+        Checks: Server returns proper error for non-existent documents.
+        """
         resp = client.post('/api/read-watermark/99999',
                            json={
                                'method': 'test-success',
@@ -251,7 +285,10 @@ class TestReadWatermark:
         assert resp.status_code == 404
 
     def test_missing_method(self, client, auth_headers, test_pdf):
-        """Test error when method field missing."""
+        """Test behavior when method field is missing.
+
+        Checks: Server validates that method field is required.
+        """
         with open(test_pdf, 'rb') as f:
             resp = client.post('/api/upload-document',
                                data={'file': (f, 'test.pdf')},
@@ -266,7 +303,10 @@ class TestReadWatermark:
         assert resp.status_code == 400
 
     def test_missing_key(self, client, auth_headers, test_pdf):
-        """Test error when key field missing."""
+        """Test behavior when key field is missing.
+
+        Checks: Server validates that key field is required.
+        """
         with open(test_pdf, 'rb') as f:
             resp = client.post('/api/upload-document',
                                data={'file': (f, 'test.pdf')},
@@ -281,7 +321,10 @@ class TestReadWatermark:
         assert resp.status_code == 400
 
     def test_no_auth(self, client):
-        """Test error when not authenticated."""
+        """Test what happens without login.
+
+        Checks: Server blocks requests from users who aren't logged in.
+        """
         resp = client.post('/api/read-watermark/1',
                            json={
                                'method': 'test-success',

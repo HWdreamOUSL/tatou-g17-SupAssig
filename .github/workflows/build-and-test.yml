@@ -116,13 +116,13 @@ jobs:
           files: server/test-results/junit.xml
           check_name: Test Results
 
-      - name: Comment coverage on PR
-        uses: py-cov-action/python-coverage-comment-action@v3
-        if: github.event_name == 'pull_request'
-        with:
-          GITHUB_TOKEN: ${{ github.token }}
-          MINIMUM_GREEN: 80
-          MINIMUM_ORANGE: 60
+      #- name: Comment coverage on PR
+        #uses: py-cov-action/python-coverage-comment-action@v3
+        #if: github.event_name == 'pull_request'
+        #with:
+          #GITHUB_TOKEN: ${{ github.token }}
+         # MINIMUM_GREEN: 80
+          #MINIMUM_ORANGE: 60
 
   docker:
     runs-on: ubuntu-latest

@@ -42,10 +42,9 @@ class TestCreateWatermarkAdditional:
     """Additional tests for create-watermark endpoint."""
 
     def test_missing_intended_for(self, client, auth_headers, test_pdf):
-        """Test that intended_for field is required.
+        """Test behavior when intended_for field is missing.
 
-        Covers: Input validation for intended_for parameter.
-        Expected: 400 error when intended_for is missing.
+        Checks: Server validates that intended_for is a required field.
         """
         # Upload a document
         with open(test_pdf, 'rb') as f:
@@ -69,10 +68,9 @@ class TestCreateWatermarkAdditional:
         assert 'error' in resp.get_json()
 
     def test_invalid_key_type(self, client, auth_headers, test_pdf):
-        """Test that key parameter must be a string.
+        """Test what happens when key is wrong data type.
 
-        Covers: Type validation for key parameter.
-        Expected: 400 error when key is not a string.
+        Checks: Server validates that key must be string, not number or other type.
         """
         # Upload a document
         with open(test_pdf, 'rb') as f:
@@ -96,10 +94,9 @@ class TestCreateWatermarkAdditional:
         assert 'error' in resp.get_json()
 
     def test_unauthorized_create_watermark(self, client, create_test_user, test_pdf):
-        """Test that users cannot watermark documents owned by other users.
+        """Test what happens when user tries to watermark someone else's document.
 
-        Covers: Authorization check - document ownership validation.
-        Expected: 404 error (don't reveal document exists to unauthorized user).
+        Checks: Users can only watermark their own documents, not other users' files.
         """
         # User 1 uploads a document
         user1 = create_test_user("_user1")
@@ -135,7 +132,7 @@ class TestCreateWatermarkAdditional:
                            },
                            headers=auth2)
 
-        # Should return 404 (not 403) to avoid leaking document existence
+        # Should return 404 (not 403) to avoid revealing document exists
         assert resp.status_code == 404
 
 
@@ -143,10 +140,9 @@ class TestReadWatermarkAdditional:
     """Additional tests for read-watermark endpoint."""
 
     def test_unauthorized_read_watermark(self, client, create_test_user, test_pdf):
-        """Test that users cannot read watermarks from documents owned by others.
+        """Test what happens when user tries to read someone else's watermark.
 
-        Covers: Authorization check for read operations.
-        Expected: 404 error when trying to read another user's watermark.
+        Checks: Users can only read watermarks from their own documents.
         """
         # User 1 creates and watermarks a document
         user1 = create_test_user("_user1")
@@ -190,14 +186,13 @@ class TestReadWatermarkAdditional:
                            },
                            headers=auth2)
 
-        # Should return 404 to not reveal document existence
+        # Should return 404 to not reveal document exists
         assert resp.status_code == 404
 
     def test_read_watermark_from_unwatermarked_file(self, client, auth_headers, test_pdf):
-        """Test reading watermark from a file that has no watermark.
+        """Test reading watermark from file that never had one added.
 
-        Covers: Error handling when watermark doesn't exist in file.
-        Expected: 400 error when attempting to read non-existent watermark.
+        Checks: Server handles case where we try to read watermark that doesn't exist.
         """
         # Upload document WITHOUT creating a watermark
         with open(test_pdf, 'rb') as f:
@@ -218,4 +213,3 @@ class TestReadWatermarkAdditional:
         # Should fail because no watermark was ever created
         assert resp.status_code == 400
         assert 'error' in resp.get_json()
-

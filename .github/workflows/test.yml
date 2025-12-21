@@ -27,6 +27,7 @@ jobs:
       
       - name: Run unit tests with coverage
         run: |
+          server/.venv/bin/python -m pytest \
           python -m pytest \
             --verbose \
             --junit-xml=test-results/junit.xml \

@@ -27,10 +27,14 @@ jobs:
       
       - name: Run unit tests with coverage
         run: |
-          pytest -v \
-            --cov=. \
-            --cov-report=html \
-            --cov-report=term 
+          python -m pytest \
+            --verbose \
+            --junit-xml=test-results/junit.xml \
+            --html=test-results/report.html \
+            --self-contained-html \
+            --cov=src \
+            --cov-report=html:test-results/coverage \
+            --cov-report=term
         env:
           TEST_MODE: "1"
       
